@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<!--引入css文件-->
+		<link rel="stylesheet" type="text/css" href="todolist/css/base.css">
+    	<link rel="stylesheet" type="text/css" href="todolist/css/index.css">
+    	<!--引入React文件-->
+		<script src="src/react.js"></script>
+		<script src="src/react-dom.js"></script>
+		<script src="src/browser.min.js"></script>
+		<!--工具类js文件-->
+		<script src="js/comm.js"></script>
+		<!--数据js文件-->
+		<script src="js/data.js"></script>
+		<!--处理数据-->
+		<script src="js/app.js"></script>
+	</head>
+	<body>
+		<!--页面大框架-->
+		<section class="todoapp" id="todoList"></section>
+		<script type="text/babel">
+			//建立li的组件
+			var Item = React.createClass({
+					render: function () {
+						//li的class名字用函数根据数据里的isChecked属性来判断	
+						return  <li className={classNames({
+							completed:this.props.isChecked
+						})}>
+			                        <div className="view">
+			                            <input 
+			                            	className="toggle" 
+			                            	type="checkbox" 
+			                            	//chended的值为其对应数据的isChecked
+			                            	checked={this.props.isChecked} 
+			                            	onChange = {this.clickHandle}
+			                            	/>
+			                            <label>{this.props.title}</label>
+			                            <button 
+			                            	className="destroy"
+			                            	onClick = {this.deleteItem}
+			                            	>
+			                            </button>
+			                        </div>
+			                        <input className="edit" defaultValue="多多对对对" />
+			                    </li>
+					},
+					clickHandle : function() {
+						//选中和不选中的状态
+						this.props.toggleChecked(this.props.id);
+					},
+					deleteItem :function () {
+						//删除item的
+						this.props.deleteItem(this.props.id);
+					},
+			});
+			//建立顶层组件
+			var Todolist = React.createClass({
+				render:function(){
+					//分别声明的是传入的数据，主体内容和页脚内容
+					var data = this.props.app.data;
+					var content = '';
+					var footer = '';
+					//用来判断是否为全选的值
+					var num = 0;
+					//forEach循环遍历下data的isChecked属性，为真num++
+					data.forEach(function(item,index){
+						if( item.isChecked ){
+							num++;
+						}
+					})
+					//如果data有传入数值，则写入主体内容和页脚
+					if(data.length){
+						//主体内容的渲染
+						content = <section className="main">
+					                <input 
+					                	className = "toggle-all" 
+					                	type = "checkbox" 
+					                	checked = {num == data.length ? true : false} 
+					                	onChange = {this.changeHandle}
+					                	/>
+					                <ul className="todo-list">
+					                    {
+					                    	data.map(function (item,index){
+					                    		return <Item 
+					                    			key={index} 
+					                    			{...item} 
+					                    			toggleChecked = {this.toggleChecked}
+			                    					deleteItem = {this.deleteItem}
+					                    			/>
+					                    	}.bind(this))
+					                    }
+					                </ul>
+					           </section>
+					    //页脚的渲染
+			           footer = <footer className="footer">
+						            <span className="todo-count">
+						            	<strong>
+						            		{data.length - num}
+						            	</strong>
+						            	<span>条未选中</span>
+						            </span>
+					            </footer>
+					}
+					//组件返回
+					return  (
+					<div>
+						<header className="header" >
+			                <h1>todos</h1>
+			                <input 
+			                	className="new-todo" 
+			                	placeholder="请输入内容"
+			                	onKeyDown={this.downHandle}
+			                />
+			            </header>
+			            {content}
+			            {footer}
+			            
+		            </div>
+					)
+				},
+				//键盘按下事件，用来添加数据
+				downHandle:function (ev){
+					if( ev.keyCode === 13){
+						if( ev.target.value == ''){
+							alert('不能为空，请输入')
+						}else{
+							this.props.app.addItem(ev.target.value);
+		
+							ev.target.value = '';
+						}
+					}
+				},
+				//单选框的点击判断函数
+				toggleChecked:function (id){
+					this.props.app.toggleChecked(id);
+				},
+				//删除li的函数
+				deleteItem:function (id){
+					this.props.app.deleteItem(id);	
+				},
+				//点击全选按钮的事件
+				changeHandle:function (ev){
+					this.props.app.toggleAll(ev.target.checked);		
+				}
+			});
+			//重新渲染页面的函数
+			function render(){
+					ReactDOM.render(
+					<Todolist app = {app} />,
+					document.getElementById('todoList')
+				)
+			}
+			render();
+			//为了能在app下调用
+			app.render = render;
+		</script>
+		<!--<script>
+			console.log(document.getElementById('todoList'));
+		</script>-->
+	</body>
+</html>

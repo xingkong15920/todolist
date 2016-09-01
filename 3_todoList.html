@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title></title>
+		<style></style>
+		<link rel="stylesheet" type="text/css" href="todolist/css/base.css">
+    	<link rel="stylesheet" type="text/css" href="todolist/css/index.css">
+		<script src="src/react.js"></script>
+		<script src="src/react-dom.js"></script>
+		<script src="src/browser.min.js"></script>
+		<script src="js/comm.js"></script>
+		<script src="js/data.js"></script>
+		<script src="js/app.js"></script>
+		
+	</head>
+
+	<body>
+		<section class="todoapp" id="todoList"></section>
+	
+<script type="text/babel">
+
+	//defaultChecked的问题
+
+	var Item = React.createClass({
+		render: function () {
+			/*
+			var completed = this.props.isChecked ? "completed" : "";*/
+
+
+			return  <li className={classNames({
+							completed:this.props.isChecked
+						})}>
+                        <div className="view">
+                            <input
+                            	className="toggle" 
+                            	type="checkbox"
+                            	checked= {this.props.isChecked}
+                            	onChange = {this.clickHandle} 
+                            	
+                            />
+                            <label>{this.props.title}</label>
+                            <button className="destroy" onClick={this.deleteItem}></button>
+                        </div>
+                        <input className="edit" defaultValue="多多对对对" />
+                    </li>
+		},
+		clickHandle:function (){
+			//选中和不选中的状态
+			this.props.toggleChecked(this.props.id);
+		},
+		deleteItem:function (){
+			this.props.deleteItem(this.props.id);	
+		}
+	});
+
+	//组件间的通信  父子级通信
+	//父级传给子级一个函数，子级调用这个函数，就可以影响父级
+	
+	var TodoList = React.createClass({
+		render:function (){
+
+			var data = this.props.app.data;
+			var content = '',footer = '';
+			var num = 0;
+
+			//var _this = this;
+
+			if( data.length ){
+
+				//统计一下有所个条数据的isChecked是为true
+
+				data.forEach(function (item){
+					if( item.isChecked ){
+						num++;
+					}	
+				});
+
+
+				content = <section className="main">
+			                <input 
+			                	className="toggle-all" 
+			                	type="checkbox" 
+			                	checked = {num === data.length ? true :false}
+			                	onChange={this.changeHandle}
+			                />
+			                <ul className="todo-list">
+			                    {
+			                    	data.map(function (item,index){
+			                    		return <Item 
+			                    					key={index} 
+			                    					{...item}  
+			                    					toggleChecked = {this.toggleChecked}
+			                    					deleteItem = {this.deleteItem}
+			                    				/>
+			                    	}.bind(this))
+			                    }
+			                </ul>
+			            </section>
+			    footer = <footer className="footer">
+				            <span className="todo-count">
+				            	<strong>{data.length - num}</strong>
+				            	<span>条未选中</span>
+				            </span>
+			            </footer>
+			}
+			
+
+			return  (
+					<div>
+						<header className="header" >
+			                <h1>todos</h1>
+			                <input 
+			                	className="new-todo" 
+			                	placeholder="请输入内容"
+			                	onKeyDown={this.downHandle}
+			                />
+			            </header>
+			            {content}
+			            {footer}
+			            
+		            </div>
+			)
+		},
+		downHandle:function (ev){
+			if( ev.keyCode === 13 ){
+				//添加数据 重新渲染
+
+				this.props.app.addItem(ev.target.value);
+
+				ev.target.value = '';
+			}
+		},
+		toggleChecked:function (id){
+			this.props.app.toggleChecked(id);
+		},
+		deleteItem:function (id){
+			this.props.app.deleteItem(id);	
+		},
+		changeHandle:function (ev){
+			this.props.app.toggleAll(ev.target.checked);		
+		}
+	});
+
+	function render(){
+		ReactDOM.render(
+			<TodoList app={app} />,
+			document.getElementById("todoList")
+		)
+	}
+
+	render();
+	//把render这个函数放在app中
+	app.render = render;
+
+</script>
+
+	</body>
+</html>
